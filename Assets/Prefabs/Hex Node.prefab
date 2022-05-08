@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2773690901892146477}
   - component: {fileID: 2773690901892146476}
   - component: {fileID: 218733493365751750}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Hex Node Outline
   m_TagString: Outline
   m_Icon: {fileID: 0}
@@ -123,7 +123,7 @@ GameObject:
   - component: {fileID: 3424677063886263169}
   - component: {fileID: 3424677063886263168}
   - component: {fileID: 788653838790183274}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Hex Node
   m_TagString: Untagged
   m_Icon: {fileID: 0}

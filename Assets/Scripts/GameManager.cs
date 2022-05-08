@@ -40,10 +40,18 @@ public class GameManager : MonoBehaviour
     public int dice;
     bool switchingPlayer;
 
+    public int playerDiceResult;
+    public GameObject button;
 
     private void Awake()
     {
         instance = this;
+    }
+
+    private void Start()
+    {
+        ActivateDice(false);
+        button.SetActive(false);
     }
 
     private void Update()
@@ -69,6 +77,39 @@ public class GameManager : MonoBehaviour
                 case States.SWITCH_PLAYER:
                     {
                         StartCoroutine(SwitchPlayer());
+                        state = States.WAITING;
+                    }
+                    break;
+            }
+        }
+
+        if (playerList[activePlayer].playerType == Agent.PlayerTypes.HUMAN)
+        {
+            switch (state)
+            {
+                case States.DICE_ROLL:
+                    {
+                        HumanDiceRoll();
+                        state = States.WAITING;
+                    }
+                    break;
+
+                case States.WAITING:
+                    {
+                        if (Input.GetKeyDown(KeyCode.G))
+                        {
+                            playerDiceResult = 6;
+                        }
+                    }
+                    break;
+
+                case States.SWITCH_PLAYER:
+                    {
+                        DeactivateInput();
+                        button.SetActive(false);
+
+                        StartCoroutine(SwitchPlayer());
+
                         state = States.WAITING;
                     }
                     break;
@@ -239,4 +280,131 @@ public class GameManager : MonoBehaviour
         //Winning VFX, SFX
         playerList[activePlayer].hasWon = true;
     }
+
+    #region Human Input
+
+     void HumanDiceRoll()
+    {
+        ActivateDice(true);
+
+        //playerDiceResult = 6;
+        Agent currentAgent = playerList[activePlayer];
+
+        List<Pawn> movablePawns = new List<Pawn>();
+
+        bool baseNodeFull = false;
+        for (int i = 0; i < currentAgent.pawns.Length; i++)
+        {
+            //CHECK IF START NODE IS FULL
+            if (currentAgent.pawns[i].currentPos == currentAgent.pawns[i].startPos)
+            {
+                baseNodeFull = true;
+                break;
+            }
+        }
+
+        if(playerDiceResult < 6)
+        {
+            Debug.Log("1");
+            movablePawns.AddRange(PossiblePawns());
+            if(movablePawns.Count < 1)
+            {
+                button.SetActive(true);
+
+                Debug.Log("2");
+                //state = States.SWITCH_PLAYER;
+            }
+        }
+
+        if(playerDiceResult == 6 && !baseNodeFull)
+        {
+            for (int i = 0; i < currentAgent.pawns.Length; i++)
+            {
+                if (!currentAgent.pawns[i].hasSpawned)
+                {
+                    movablePawns.Add(currentAgent.pawns[i]);
+                }
+            }
+            movablePawns.AddRange(PossiblePawns());
+
+        }
+        else if(playerDiceResult == 6 && baseNodeFull)
+        {
+
+             movablePawns.AddRange(PossiblePawns());
+
+        }
+
+        if(movablePawns.Count > 0)
+        {
+            for (int i = 0; i < movablePawns.Count; i++)
+            {
+                movablePawns[i].HasTurn(true);
+                Debug.Log("3");
+            }
+        }
+        if (movablePawns.Count == 0 && playerDiceResult == 6)
+        {
+            currentAgent.hasMove = false;
+            state = States.DICE_ROLL;
+        }
+        else
+        {
+            currentAgent.hasMove = false;
+            state = States.SWITCH_PLAYER;
+            //button.SetActive(true);
+            Debug.Log("4");
+        }
+        Debug.Log("5");
+    }
+
+    List <Pawn> PossiblePawns()
+    {
+        Agent currentAgent = playerList[activePlayer];
+
+        List<Pawn> tempList = new List<Pawn>();
+
+        for (int i = 0; i < currentAgent.pawns.Length; i++)
+        {
+            if (currentAgent.pawns[i].hasSpawned)
+            {
+                if (currentAgent.pawns[i].CheckForAttack(currentAgent.pawns[i].pawnID, playerDiceResult))
+                {
+                    tempList.Add(currentAgent.pawns[i]);
+                    //continue;
+                }
+                if (currentAgent.pawns[i].CheckPossibleMovement(playerDiceResult))
+                {
+                    tempList.Add(currentAgent.pawns[i]);
+                }
+            }
+        }
+
+        return tempList;
+    }
+
+    void ActivateDice(bool on)
+    {
+        if(on)
+        {
+            playerDiceResult = Random.Range(1, 7);
+        }
+    }
+
+    public void DeactivateInput()
+    {
+        for (int i = 0; i < playerList.Count; i++)
+        {
+            for (int j = 0; j < playerList[i].pawns.Length; j++)
+            {
+                playerList[i].pawns[j].HasTurn(false);
+            }
+        }
+    }
+
+    public void Button()
+    {
+        state = States.SWITCH_PLAYER;
+    }
+    #endregion
 }

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 1852555773602265869}
   - component: {fileID: 2541698146331380297}
   - component: {fileID: 6274762751424497542}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Capsule (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -106,7 +106,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3881667602007448199}
   - component: {fileID: 3881667602007448198}
-  m_Layer: 0
+  - component: {fileID: 7849077503642203692}
+  m_Layer: 8
   m_Name: Pawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -145,11 +146,28 @@ MonoBehaviour:
   finalRoute: {fileID: 0}
   startPos: {fileID: 0}
   currentPos: {fileID: 0}
+  goalNode: {fileID: 0}
   foundainPos: {fileID: 0}
   fullPath: []
-  Selector: {fileID: 0}
   steps: 0
+  pawnID: 0
+  value: 0
   hasSpawned: 0
+  canSpawn: 0
+--- !u!136 &7849077503642203692
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3881667602007448197}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 1
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &3881667602705447226
 GameObject:
   m_ObjectHideFlags: 0
@@ -162,7 +180,7 @@ GameObject:
   - component: {fileID: 3881667602705447238}
   - component: {fileID: 3881667602705447237}
   - component: {fileID: 3881667602705447236}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Capsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}

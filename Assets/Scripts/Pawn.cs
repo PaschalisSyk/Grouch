@@ -24,31 +24,34 @@ public class Pawn : MonoBehaviour
     public int value;
 
     bool isMoving;
+    bool hasTurn;
     public bool hasSpawned;
     public bool canSpawn = false;
+    public bool mouseOver = false;
+
+    int pawnMask;
+    int nodeMask;
+    int highlightMask;
+
+    private void Awake()
+    {
+        pawnMask = LayerMask.NameToLayer("Pawn");
+        nodeMask = LayerMask.NameToLayer("Node");
+        highlightMask = LayerMask.NameToLayer("Highlights");
+    }
 
     private void Start()
     {
         startPosIndex = commonRoute.GetPosition(startPos.gameObject.transform);
         FillFullPath();
+
+        HasTurn(false);
     }
 
 
     private void Update()
     {
         PawnValue();
-
-
-       /*if(Input.GetKeyDown(KeyCode.Space) && !isMoving)
-        {
-            steps = Random.Range(1, 7);
-            Debug.Log("Rolled" + steps);
-
-            if(routePos + steps <= fullPath.Count)
-            {
-                StartCoroutine(Move());
-            }
-        } */
     }
 
     IEnumerator Move(int diceResult)
@@ -87,7 +90,15 @@ public class Pawn : MonoBehaviour
         goalNode.isTaken = true;
 
         currentPos = goalNode;
+
+        currentPos.gameObject.layer = nodeMask;
+        if(routePos == 43)
+        {
+            currentPos.SetLayerOnAll(this.gameObject, pawnMask);
+        }
+
         goalNode = null;
+        
 
         if(Win())
         {
@@ -173,6 +184,7 @@ public class Pawn : MonoBehaviour
         currentPos = goalNode;
         goalNode = null;
 
+        GameManager.instance.DeactivateInput();
         GameManager.instance.state = GameManager.States.DICE_ROLL;
 
         isMoving = false;
@@ -214,37 +226,76 @@ public class Pawn : MonoBehaviour
         StartCoroutine(Move(diceResult));
     }
 
+   int CheckForEnemiesBehind(int pawnID)
+    {
+        int followingValue = 0;
+        for (int i = 0; i < 7; i++)
+        {
+            int tempPos = routePos - i;
+            tempPos %= commonRoute.childNodeList.Count;
+            if(tempPos < 0)
+            {
+                tempPos = commonRoute.childNodeList.Count - i;
+                //continue;
+            }
+
+            if(fullPath[tempPos].isTaken && fullPath[tempPos].Pawn.pawnID != this.pawnID)
+            {
+                followingValue += 75;
+            }
+        }
+        return followingValue;
+    }
+
+    int CheckForEnemiesInFront(int pawnID)
+    {
+        int chasingValue = 0;
+        for (int i = 0; i < 8; i++)
+        {
+            int tempPos = routePos + i;
+            tempPos %= commonRoute.childNodeList.Count;
+
+            if (fullPath[tempPos].isTaken && fullPath[tempPos].Pawn.pawnID != this.pawnID)
+            {
+                chasingValue += 50;
+            }
+
+        }
+        return chasingValue;
+    }
+
     public void PawnValue()
     {
         int posMultiplier = 1;
         int spawnMultiplier = 0;
         int closeToEndMultiplier = 0;
+        int enemiesBehindValue = 0;
+        int chasingEnemiesValue = 0;
         int disToCover = fullPath.Count - routePos * posMultiplier;
-        if(!hasSpawned)
+
+        if (!hasSpawned)
         {
             spawnMultiplier = 1;
         }
-        if(disToCover<18)
+        if (disToCover < 18)
         {
-            closeToEndMultiplier = 1;
-            
+            if (disToCover < 5)
+            {
+                closeToEndMultiplier = 0;
+            }
+            else closeToEndMultiplier = 1;
+
         }
         int spawnValue = 100 * spawnMultiplier;
+        enemiesBehindValue = CheckForEnemiesBehind(pawnID);
+        chasingEnemiesValue = CheckForEnemiesInFront(pawnID);
 
-        value = disToCover + spawnValue + (100*closeToEndMultiplier);  
+        value = disToCover + spawnValue + (100 * closeToEndMultiplier) + enemiesBehindValue + chasingEnemiesValue;
     }
 
-    /*public bool CheckForEnemiesBehind(int pawnID)
+    /*int CheckBaseNodes(int pawnID)
     {
         
-        for (int i = 0; i < 5; i++)
-        {
-            int tempPos = routePos - i;
-            tempPos %= commonRoute.childNodeList.Count;
-
-            
-        }
-
     }*/
 
     void ReturnToFountain()
@@ -284,4 +335,56 @@ public class Pawn : MonoBehaviour
     {
         GameManager.instance.state = GameManager.States.SWITCH_PLAYER;
     }
+
+    #region Human Input
+
+    public void HasTurn(bool on)
+    {
+        hasTurn = on;
+    }
+
+    void OnMouseDown()
+    {
+        if(hasTurn)
+        {
+            if(!hasSpawned)
+            {
+                GetSpawned();
+            }
+            else
+            {
+                StartMovement(GameManager.instance.playerDiceResult);
+            }
+            GameManager.instance.DeactivateInput();
+        }
+    }
+    private void OnMouseOver()
+    {
+        if(this.hasTurn && hasSpawned && this.pawnID == 1)
+        {
+            this.gameObject.layer = highlightMask;
+            if (routePos + GameManager.instance.playerDiceResult >= fullPath.Count)
+            {
+                return;
+            }
+            else this.fullPath[routePos + GameManager.instance.playerDiceResult].gameObject.layer = highlightMask;
+            this.fullPath[routePos + GameManager.instance.playerDiceResult].SetLayerOnAll(this.gameObject, highlightMask);
+        }
+    }
+    private void OnMouseExit()
+    {
+        if(this.pawnID == 1)
+        {
+            this.gameObject.layer = pawnMask;
+            if (routePos + GameManager.instance.playerDiceResult >= fullPath.Count)
+            {
+                return;
+            }
+            this.fullPath[routePos + GameManager.instance.playerDiceResult].SetLayerOnAll(this.gameObject, pawnMask);
+            this.fullPath[routePos + GameManager.instance.playerDiceResult].gameObject.layer = nodeMask;
+        }
+
+    }
+
+    #endregion
 }

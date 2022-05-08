@@ -27,6 +27,7 @@ public class CameraController : MonoBehaviour
     {
         HandleMouseInput();
         HandleMovementInput();
+        KeepInBounds();
     }
 
     void HandleMouseInput()
@@ -103,5 +104,24 @@ public class CameraController : MonoBehaviour
 
         transform.position = Vector3.Lerp(transform.position, newPosition, Time.deltaTime * movementTime);
         transform.rotation = Quaternion.Lerp(transform.rotation, newRotation, Time.deltaTime * movementTime);
+    }
+    void KeepInBounds()
+    {
+        if(transform.position.x > -6)
+        {
+            transform.position = new Vector3(-6f, transform.position.y, transform.position.z);
+        }
+        if(transform.position.x < -16)
+        {
+            transform.position = new Vector3(-16, transform.position.y, transform.position.z);
+        }
+        if(transform.position.z > 3)
+        {
+            transform.position = new Vector3(transform.position.x, transform.position.y, 3f);
+        }
+        if(transform.position.z < 0)
+        {
+            transform.position = new Vector3(transform.position.x, transform.position.y, 0);
+        }
     }
 }
