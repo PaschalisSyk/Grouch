@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 public class GameManager : MonoBehaviour
 {
@@ -38,10 +40,14 @@ public class GameManager : MonoBehaviour
     public int activePlayer;
     public string playerID;
     public int dice;
-    bool switchingPlayer;
+    public bool switchingPlayer;
 
     public int playerDiceResult;
     public GameObject button;
+    public GameObject diceCube;
+    GameObject _dice;
+    DiceAnim diceAnim;
+    public bool diceOn;
 
     private void Awake()
     {
@@ -50,8 +56,15 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        diceAnim = diceCube.GetComponent<DiceAnim>();
+        diceOn = true;
+
         ActivateDice(false);
         button.SetActive(false);
+
+        int randomPlayer = Random.Range(0, playerList.Count);
+        activePlayer = randomPlayer;
+        InfoText.instance.Message(playerList[activePlayer].playerName + " starts first");
     }
 
     private void Update()
@@ -77,6 +90,8 @@ public class GameManager : MonoBehaviour
                 case States.SWITCH_PLAYER:
                     {
                         StartCoroutine(SwitchPlayer());
+                        Invoke("DiceScale", 1);
+
                         state = States.WAITING;
                     }
                     break;
@@ -89,7 +104,8 @@ public class GameManager : MonoBehaviour
             {
                 case States.DICE_ROLL:
                     {
-                        HumanDiceRoll();
+                        StartCoroutine(HumanDelay());
+                        HumanDiceRoll(diceOn);
                         state = States.WAITING;
                     }
                     break;
@@ -109,11 +125,18 @@ public class GameManager : MonoBehaviour
                         button.SetActive(false);
 
                         StartCoroutine(SwitchPlayer());
+                        Invoke("DiceScale", 1);
+
 
                         state = States.WAITING;
                     }
                     break;
             }
+        }
+
+        if(Input.GetKeyDown(KeyCode.Backspace))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
         }
     }
 
@@ -121,26 +144,34 @@ public class GameManager : MonoBehaviour
     {
         int diceResult = Random.Range(1, 7);
         dice = diceResult;
+
+
         //int diceResult = 6;
 
-        if(diceResult == 6)
+        if (diceResult == 6)
         {
             // Check if the base node is not occupied from a friendly pawn. If it is check for movement. Else spawn pawn if possible.
             CheckSpawnOrMovement(diceResult);
+            Invoke("DiceScale", 1);
+
         }
 
         if (diceResult <6)
         {
             PawnMovement(diceResult);
         }
-        Debug.Log("Dice result" + diceResult);
+
 
     }
 
     IEnumerator AIPlayDelay()
     {
         yield return new WaitForSeconds(1);
+        DiceScale();
         DiceRoll();
+        _dice = Instantiate(diceCube,diceCube.transform.position, transform.rotation);
+        DiceText(dice);
+
     }
 
     void CheckSpawnOrMovement(int diceResult)
@@ -239,7 +270,7 @@ public class GameManager : MonoBehaviour
 
         switchingPlayer = true;
 
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(2);
         SetNextAgent();
 
         switchingPlayer = false;
@@ -272,6 +303,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        InfoText.instance.Message(playerList[activePlayer].playerName + "'s turn!");
         state = States.DICE_ROLL;
     }
 
@@ -279,12 +311,48 @@ public class GameManager : MonoBehaviour
     {
         //Winning VFX, SFX
         playerList[activePlayer].hasWon = true;
+        for (int i = 0; i < SaveSettings.winners.Length; i++)
+        {
+            if(SaveSettings.winners[i] == "")
+            {
+                SaveSettings.winners[i] = playerList[activePlayer].playerName;
+                break;
+            }
+        }
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+    }
+
+    /*public void DestroyDice()
+    {
+        _dice.GetComponent<DiceAnim>().DestroyCube();
+    }*/
+
+    public void DiceScale()
+    {
+
+        if (_dice != null)
+        {
+            _dice.GetComponent<DiceAnim>().Scale();
+
+        }
+    }
+
+    void DiceText(int diceResult)
+    {
+        Debug.Log("Dice result" + diceResult);
+        InfoText.instance.Message(playerList[activePlayer].playerName + " has rolled " + diceResult);
     }
 
     #region Human Input
 
-     void HumanDiceRoll()
+    void HumanDiceRoll(bool diceBool)
     {
+        diceBool = diceOn;
+        if(!diceBool)
+        {
+            return;
+        }
         ActivateDice(true);
 
         //playerDiceResult = 6;
@@ -307,35 +375,41 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("1");
             movablePawns.AddRange(PossiblePawns());
-            if(movablePawns.Count < 1)
-            {
-                button.SetActive(true);
-
-                Debug.Log("2");
-                //state = States.SWITCH_PLAYER;
-            }
+            
         }
 
-        if(playerDiceResult == 6 && !baseNodeFull)
+
+        if(playerDiceResult == 6)
         {
-            for (int i = 0; i < currentAgent.pawns.Length; i++)
+            if (!baseNodeFull)
             {
-                if (!currentAgent.pawns[i].hasSpawned)
+                for (int i = 0; i < currentAgent.pawns.Length; i++)
                 {
-                    movablePawns.Add(currentAgent.pawns[i]);
+                    if (!currentAgent.pawns[i].hasSpawned)
+                    {
+                        movablePawns.Add(currentAgent.pawns[i]);
+                    }
                 }
+                movablePawns.AddRange(PossiblePawns());
+
             }
-            movablePawns.AddRange(PossiblePawns());
+            else if (baseNodeFull)
+            {
 
+                movablePawns.AddRange(PossiblePawns());
+
+            }
         }
-        else if(playerDiceResult == 6 && baseNodeFull)
+
+        if (movablePawns.Count < 1)
         {
+            Invoke("Button", 1);
 
-             movablePawns.AddRange(PossiblePawns());
-
+            Debug.Log("2");
+            //state = States.SWITCH_PLAYER;
         }
 
-        if(movablePawns.Count > 0)
+        if (movablePawns.Count > 0)
         {
             for (int i = 0; i < movablePawns.Count; i++)
             {
@@ -347,6 +421,8 @@ public class GameManager : MonoBehaviour
         {
             currentAgent.hasMove = false;
             state = States.DICE_ROLL;
+            Invoke("DiceScale", 1);
+
         }
         else
         {
@@ -355,6 +431,9 @@ public class GameManager : MonoBehaviour
             //button.SetActive(true);
             Debug.Log("4");
         }
+
+        Invoke("PlayerDiceText", 1);
+
         Debug.Log("5");
     }
 
@@ -387,8 +466,14 @@ public class GameManager : MonoBehaviour
     {
         if(on)
         {
+            //DiceScale();
             playerDiceResult = Random.Range(1, 7);
         }
+        if(playerDiceResult == 6)
+        {
+            diceOn = false;
+        }
+
     }
 
     public void DeactivateInput()
@@ -405,6 +490,26 @@ public class GameManager : MonoBehaviour
     public void Button()
     {
         state = States.SWITCH_PLAYER;
+        Invoke("DiceScale",1);
     }
+
+    void PlayerDiceText()
+    {
+        InfoText.instance.Message("You have rolled " + playerDiceResult);
+    }
+
+    IEnumerator HumanDelay()
+    {
+        yield return new WaitForSeconds(1);
+        _dice = Instantiate(diceCube, diceCube.transform.position, transform.rotation);
+
+    }
+
+    void SetButtonActive()
+    {
+        button.SetActive(true);
+     
+    }
+
     #endregion
 }

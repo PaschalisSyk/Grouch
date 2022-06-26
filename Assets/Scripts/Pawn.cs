@@ -356,6 +356,8 @@ public class Pawn : MonoBehaviour
                 StartMovement(GameManager.instance.playerDiceResult);
             }
             GameManager.instance.DeactivateInput();
+            GameManager.instance.DiceScale();
+            GameManager.instance.diceOn = true;
         }
     }
     private void OnMouseOver()

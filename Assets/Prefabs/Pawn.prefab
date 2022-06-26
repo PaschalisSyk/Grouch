@@ -154,6 +154,7 @@ MonoBehaviour:
   value: 0
   hasSpawned: 0
   canSpawn: 0
+  mouseOver: 0
 --- !u!136 &7849077503642203692
 CapsuleCollider:
   m_ObjectHideFlags: 0
