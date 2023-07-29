@@ -8,13 +8,13 @@ public class GameOverMenu : MonoBehaviour
 {
     public TextMeshProUGUI first;
     public TextMeshProUGUI second;
-    public TextMeshProUGUI third;
+    //public TextMeshProUGUI third;
 
     private void Start()
     {
-        first.text = "1st" + SaveSettings.winners[0];
-        second.text = "2nd" + SaveSettings.winners[1];
-        third.text = "3rd" + SaveSettings.winners[2];
+        first.text = "1. " + SaveSettings.winners[0];
+        second.text = "2. " + SaveSettings.winners[1];
+        //third.text = "3rd" + SaveSettings.winners[2];
     }
 
     public void ReturnButton()

@@ -281,15 +281,18 @@ public class Pawn : MonoBehaviour
         {
             if (disToCover < 5)
             {
-                closeToEndMultiplier = 0;
+                closeToEndMultiplier = 2;
             }
             else closeToEndMultiplier = 1;
 
         }
-        int spawnValue = 100 * spawnMultiplier;
-        enemiesBehindValue = CheckForEnemiesBehind(pawnID);
-        chasingEnemiesValue = CheckForEnemiesInFront(pawnID);
-
+        int spawnValue = 50 * spawnMultiplier;
+        if(hasSpawned)
+        {
+            enemiesBehindValue = CheckForEnemiesBehind(pawnID);
+            chasingEnemiesValue = CheckForEnemiesInFront(pawnID);
+        }
+        
         value = disToCover + spawnValue + (100 * closeToEndMultiplier) + enemiesBehindValue + chasingEnemiesValue;
     }
 

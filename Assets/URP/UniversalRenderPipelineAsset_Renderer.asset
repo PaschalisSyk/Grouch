@@ -95,7 +95,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b3d386ba5cd94485973aee1479b272e, type: 3}
   m_Name: HighlightsTransp
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   settings:
     passTag: HighlightsTransp
     Event: 300
@@ -105,7 +105,7 @@ MonoBehaviour:
         serializedVersion: 2
         m_Bits: 512
       PassNames: []
-    overrideMaterial: {fileID: 2100000, guid: b56870a88882f1642b9a6bc38893a1b0, type: 2}
+    overrideMaterial: {fileID: 2100000, guid: 71d7725e06f5b414c9812dc94fa1d4b4, type: 2}
     overrideMaterialPassIndex: 0
     overrideDepthState: 0
     depthCompareFunction: 4

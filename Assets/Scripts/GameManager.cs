@@ -60,15 +60,20 @@ public class GameManager : MonoBehaviour
         diceOn = true;
 
         ActivateDice(false);
-        button.SetActive(false);
+        //button.SetActive(false);
 
-        int randomPlayer = Random.Range(0, playerList.Count);
-        activePlayer = randomPlayer;
-        InfoText.instance.Message(playerList[activePlayer].playerName + " starts first");
+        StartCoroutine(IntroDelay());
+
     }
+
 
     private void Update()
     {
+        if(Time.timeSinceLevelLoad < 4)
+        {
+            return;
+        }
+
         playerID = playerList[activePlayer].playerName;
         if (playerList[activePlayer].playerType == Agent.PlayerTypes.AI)
         {
@@ -243,8 +248,8 @@ public class GameManager : MonoBehaviour
 
         if(movablePawns.Count > 0)
         {
-            movablePawns = movablePawns.OrderByDescending(x => x.value).ToList();
-            movablePawns[0].StartMovement(diceResult);
+            movablePawns.OrderByDescending(x => x.value).FirstOrDefault().StartMovement(diceResult);
+            //movablePawns[0].StartMovement(diceResult);
 
             //int num = Random.Range(0, movablePawns.Count);
             //movablePawns[num].StartMovement(diceResult);
@@ -285,7 +290,7 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < playerList.Count; i++)
         {
-            if(!playerList[activePlayer].hasWon)
+            if(!playerList[i].hasWon)
             {
                 stillPlaying++;
             }
@@ -299,6 +304,7 @@ public class GameManager : MonoBehaviour
         else if(stillPlaying<3)
         {
             //GAME OVER SCREEN
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
             state = States.WAITING;
             return;
         }
@@ -320,7 +326,15 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+    }
+
+    IEnumerator IntroDelay()
+    {
+
+        int randomPlayer = Random.Range(0, playerList.Count);
+        activePlayer = randomPlayer;
+        InfoText.instance.Message(playerList[activePlayer].playerName + " starts first");
+        yield return new WaitForSeconds(3);
     }
 
     /*public void DestroyDice()
@@ -354,6 +368,7 @@ public class GameManager : MonoBehaviour
             return;
         }
         ActivateDice(true);
+        dice = playerDiceResult;
 
         //playerDiceResult = 6;
         Agent currentAgent = playerList[activePlayer];

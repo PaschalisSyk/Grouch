@@ -4,6 +4,7 @@ using DG.Tweening;
 public class DiceAnim : MonoBehaviour
 {
     [SerializeField] private Transform DiceWire, innerCube;
+    [ColorUsage(true, true)]
     [SerializeField] Color[] color;
 
     Outline outline;
@@ -51,6 +52,6 @@ public class DiceAnim : MonoBehaviour
 
     public void DestroyCube()
     {
-            Destroy(gameObject);
+            Destroy(this.gameObject);
     }
 }
